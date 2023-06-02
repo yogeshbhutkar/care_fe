@@ -1,10 +1,8 @@
-import { PatientCategory } from "../Components/Facility/models";
-import { parsePhoneNumberFromString } from "libphonenumber-js";
-import moment from "moment";
 import { IConfig } from "./hooks/useConfig";
+import { PatientCategory } from "../Components/Facility/models";
 import { SortOption } from "../Components/Common/SortDropdown";
-
-export const KeralaLogo = "images/kerala-logo.png";
+import moment from "moment";
+import { parsePhoneNumberFromString } from "libphonenumber-js";
 
 export const RESULTS_PER_PAGE_LIMIT = 14;
 export const PAGINATION_LIMIT = 36;
@@ -19,6 +17,7 @@ export const LocalStorageKeys = {
 export interface OptionsType {
   id: number;
   text: string;
+  label?: string;
   desc?: string;
   disabled?: boolean;
 }
@@ -137,8 +136,8 @@ export const FACILITY_TYPES: Array<OptionsType> = [
   // { id: 1600, text: "District War Room" },
 ];
 
-export const SHIFTING_CHOICES: Array<OptionsType> = [
-  { id: 10, text: "PENDING" },
+export const SHIFTING_CHOICES_WARTIME: Array<OptionsType> = [
+  { id: 10, text: "PENDING", label: "SHIFTING APPROVAL PENDING" },
   { id: 15, text: "ON HOLD" },
   { id: 20, text: "APPROVED" },
   { id: 30, text: "REJECTED" },
@@ -148,6 +147,19 @@ export const SHIFTING_CHOICES: Array<OptionsType> = [
   { id: 60, text: "PATIENT TO BE PICKED UP" },
   { id: 70, text: "TRANSFER IN PROGRESS" },
   { id: 80, text: "COMPLETED" },
+  { id: 90, text: "PATIENT EXPIRED" },
+  { id: 100, text: "CANCELLED" },
+];
+
+export const SHIFTING_CHOICES_PEACETIME: Array<OptionsType> = [
+  { id: 20, text: "APPROVED", label: "PATIENTS TO BE SHIFTED" },
+  { id: 40, text: "DESTINATION APPROVED" },
+  // { id: 50, text: "DESTINATION REJECTED" },
+  { id: 60, text: "PATIENT TO BE PICKED UP", label: "TRANSPORTATION ARRANGED" },
+  { id: 70, text: "TRANSFER IN PROGRESS" },
+  { id: 80, text: "COMPLETED" },
+  { id: 90, text: "PATIENT EXPIRED" },
+  { id: 100, text: "CANCELLED" },
 ];
 
 export const SHIFTING_VEHICLE_CHOICES: Array<OptionsType> = [
@@ -476,7 +488,8 @@ export const ICMR_CATEGORY = [
 ];
 
 export const TELEMEDICINE_ACTIONS = [
-  { id: 10, text: "PENDING", desc: "Pending" },
+  { id: 10, text: "NO_ACTION", desc: "No Action" },
+  { id: 20, text: "PENDING", desc: "Pending" },
   { id: 30, text: "SPECIALIST_REQUIRED", desc: "Specialist Required" },
   { id: 40, text: "PLAN_FOR_HOME_CARE", desc: "Plan for Home Care" },
   { id: 50, text: "FOLLOW_UP_NOT_REQUIRED", desc: "Follow Up Not Required" },
@@ -641,6 +654,7 @@ export const NURSING_CARE_FIELDS: Array<OptionsType> = [
   { id: 10, text: "chest_tube_care", desc: "Chest Tube Care" },
   { id: 11, text: "tracheostomy_care", desc: "Tracheostomy Care" },
   { id: 12, text: "stoma_care", desc: "Stoma Care" },
+  { id: 13, text: "catheter_care", desc: "Catheter Care" },
 ];
 
 export const EYE_OPEN_SCALE = [
@@ -676,7 +690,7 @@ export const CONSULTATION_TABS: Array<OptionsType> = [
   { id: 6, text: "ABG", desc: "ABG" },
   { id: 7, text: "NURSING", desc: "Nursing" },
   { id: 8, text: "NEUROLOGICAL_MONITORING", desc: "Neurological Monitoring" },
-  { id: 9, text: "VENTILATOR", desc: "Ventilator" },
+  { id: 9, text: "VENTILATOR", desc: "Respiratory Support" },
   { id: 10, text: "NUTRITION", desc: "Nutrition" },
   { id: 11, text: "PRESSURE_SORE", desc: "Pressure Sore" },
   { id: 12, text: "DIALYSIS", desc: "Dialysis" },

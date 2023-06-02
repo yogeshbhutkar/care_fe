@@ -363,13 +363,13 @@ export default function SampleViewAdmin() {
 
           <div className="w-full flex flex-col gap-3">
             <SearchInput
-              name="patient_name_search"
+              name="patient_name"
               value={qParams.patient_name}
               onChange={(e) => updateQuery({ [e.name]: e.value })}
               placeholder="Search patient"
             />
             <SearchInput
-              name="district_name_search"
+              name="district_name"
               value={qParams.district_name}
               onChange={(e) => updateQuery({ [e.name]: e.value })}
               placeholder="Search by district"
@@ -378,7 +378,7 @@ export default function SampleViewAdmin() {
           </div>
 
           <AdvancedFilterButton onClick={() => advancedFilter.setShow(true)} />
-          <SampleFilter {...advancedFilter} />
+          <SampleFilter {...advancedFilter} key={window.location.search} />
         </div>
         <FilterBadges
           badges={({ badge, value }) => [

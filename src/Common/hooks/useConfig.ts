@@ -8,6 +8,8 @@ export interface IConfig {
   site_url: string;
   analytics_server_url: string;
   static_header_logo: string;
+  static_ohc_light_logo: string;
+  static_ohc_green_logo: string;
   static_light_logo: string;
   static_black_logo: string;
   /**
@@ -55,6 +57,10 @@ export interface IConfig {
    * Env to enable HCX features
    */
   enable_hcx: boolean;
+  /**
+   * Env to toggle peacetime and wartime shifting
+   */
+  wartime_shifting: boolean;
 }
 
 const useConfig = () => {

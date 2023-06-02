@@ -1,48 +1,49 @@
-import loadable from "@loadable/component";
-import { Link, navigate } from "raviger";
-import { parsePhoneNumberFromString } from "libphonenumber-js";
-import moment from "moment";
-import React, { useEffect, useState, useCallback } from "react";
-import { useDispatch } from "react-redux";
-import SwipeableViews from "react-swipeable-views";
-import FacilitiesSelectDialogue from "../ExternalResult/FacilitiesSelectDialogue";
-import { Tooltip } from "@material-ui/core";
+import * as Notification from "../../Utils/Notifications.js";
 
-import {
-  getAllPatient,
-  getDistrict,
-  getLocalBody,
-  getAnyFacility,
-} from "../../Redux/actions";
-import NavTabs from "../Common/NavTabs";
 import {
   ADMITTED_TO,
   GENDER_TYPES,
   PATIENT_CATEGORIES,
-  RESPIRATORY_SUPPORT,
   PATIENT_SORT_OPTIONS,
+  RESPIRATORY_SUPPORT,
   TELEMEDICINE_ACTIONS,
 } from "../../Common/constants";
-import PatientFilter from "./PatientFilter";
-import { parseOptionId } from "../../Common/utils";
-import { statusType, useAbortableEffect } from "../../Common/utils";
-import Chip from "../../CAREUI/display/Chip";
 import { FacilityModel, PatientCategory } from "../Facility/models";
-import SearchInput from "../Form/SearchInput";
-import useFilters from "../../Common/hooks/useFilters";
-import FilterBadge from "../../CAREUI/display/FilterBadge";
-import CareIcon from "../../CAREUI/icons/CareIcon";
-import ButtonV2 from "../Common/components/ButtonV2";
-import { ExportMenu } from "../Common/Export";
-import PhoneNumberFormField from "../Form/FormFields/PhoneNumberFormField";
-import { FieldChangeEvent } from "../Form/FormFields/Utils";
-import RecordMeta from "../../CAREUI/display/RecordMeta";
-import DoctorVideoSlideover from "../Facility/DoctorVideoSlideover";
-import CountBlock from "../../CAREUI/display/Count";
-import { useTranslation } from "react-i18next";
-import * as Notification from "../../Utils/Notifications.js";
+import { Link, navigate } from "raviger";
+import React, { useCallback, useEffect, useState } from "react";
+import {
+  getAllPatient,
+  getAnyFacility,
+  getDistrict,
+  getLocalBody,
+} from "../../Redux/actions";
+import { statusType, useAbortableEffect } from "../../Common/utils";
+
 import { AdvancedFilterButton } from "../../CAREUI/interactive/FiltersSlideover";
+import ButtonV2 from "../Common/components/ButtonV2";
+import CareIcon from "../../CAREUI/icons/CareIcon";
+import Chip from "../../CAREUI/display/Chip";
+import CountBlock from "../../CAREUI/display/Count";
+import DoctorVideoSlideover from "../Facility/DoctorVideoSlideover";
+import { ExportMenu } from "../Common/Export";
+import FacilitiesSelectDialogue from "../ExternalResult/FacilitiesSelectDialogue";
+import { FieldChangeEvent } from "../Form/FormFields/Utils";
+import FilterBadge from "../../CAREUI/display/FilterBadge";
+import NavTabs from "../Common/NavTabs";
+import PatientFilter from "./PatientFilter";
+import PhoneNumberFormField from "../Form/FormFields/PhoneNumberFormField";
+import RecordMeta from "../../CAREUI/display/RecordMeta";
+import SearchInput from "../Form/SearchInput";
 import SortDropdownMenu from "../Common/SortDropdown";
+import SwipeableViews from "react-swipeable-views";
+import { Tooltip } from "@material-ui/core";
+import loadable from "@loadable/component";
+import moment from "moment";
+import { parseOptionId } from "../../Common/utils";
+import { parsePhoneNumberFromString } from "libphonenumber-js";
+import { useDispatch } from "react-redux";
+import useFilters from "../../Common/hooks/useFilters";
+import { useTranslation } from "react-i18next";
 
 const Loading = loadable(() => import("../Common/Loading"));
 const PageTitle = loadable(() => import("../Common/PageTitle"));
@@ -204,6 +205,7 @@ export const PatientManager = () => {
     last_consultation_is_telemedicine:
       qParams.last_consultation_is_telemedicine || undefined,
     is_antenatal: qParams.is_antenatal || undefined,
+    ventilator_interface: qParams.ventilator_interface || undefined,
   };
 
   useEffect(() => {
@@ -253,6 +255,58 @@ export const PatientManager = () => {
     const filters = { ...params, csv: true, facility: qParams.facility };
     if (!isFiltered) delete filters.is_active;
     return () => getAllPatient(filters, "downloadPatients");
+  };
+
+  const preventDuplicatePatientsDuetoPolicyId = (data: any) => {
+    // Generate a array which contains imforamation of duplicate patient IDs and there respective linenumbers
+    const lines = data.split("\n"); // Split the data into individual lines
+    const idsMap = new Map(); // To store indices of lines with the same patient ID
+
+    lines.map((line: any, i: number) => {
+      const patientId = line.split(",")[0]; // Extract the patient ID from each line
+      if (idsMap.has(patientId)) {
+        idsMap.get(patientId).push(i); // Add the index to the existing array
+      } else {
+        idsMap.set(patientId, [i]); // Create a new array with the current index
+      }
+    });
+
+    const linesWithSameId = Array.from(idsMap.entries())
+      .filter(([_, indices]) => indices.length > 1)
+      .map(([patientId, indices]) => ({
+        patientId,
+        indexSame: indices,
+      }));
+
+    // after getting the array of duplicate patient IDs and there respective linenumbers we will merge the policy IDs of the duplicate patients
+
+    linesWithSameId.map((lineInfo) => {
+      const indexes = lineInfo.indexSame;
+      //get policyid of all the duplicate patients and merge them by seperating them with a semicolon
+      const mergedPolicyId = `${indexes.map((currentIndex: number) => {
+        return `${lines[currentIndex].split(",")[5]};`;
+      })}`.replace(/,/g, "");
+      // replace the policy ID of the first patient with the merged policy ID
+      const arrayOfCurrentLine = lines[indexes[0]].split(",");
+      arrayOfCurrentLine[5] = mergedPolicyId;
+      const lineAfterMerge = arrayOfCurrentLine.join(",");
+      lines[indexes[0]] = `${lineAfterMerge}`;
+    });
+
+    // after merging the policy IDs of the duplicate patients we will remove the duplicate patients from the data
+    const uniqueLines = [];
+    const ids = new Set(); // To keep track of unique patient IDs
+
+    for (const line of lines) {
+      const patientId = line.split(",")[0]; // Extract the patient ID from each line
+      if (!ids.has(patientId)) {
+        uniqueLines.push(line);
+        ids.add(patientId);
+      }
+    }
+
+    const cleanedData = uniqueLines.join("\n"); // Join the unique lines back together
+    return cleanedData;
   };
 
   useEffect(() => {
@@ -312,7 +366,21 @@ export const PatientManager = () => {
     qParams.last_vaccinated_date_after,
     qParams.last_consultation_is_telemedicine,
     qParams.is_antenatal,
+    qParams.ventilator_interface,
   ]);
+
+  const getTheCategoryFromId = () => {
+    let category_name;
+    if (qParams.category) {
+      category_name = PATIENT_CATEGORIES.find(
+        (item: any) => qParams.category === item.id
+      )?.text;
+
+      return String(category_name);
+    } else {
+      return "";
+    }
+  };
 
   const fetchDistrictName = useCallback(
     async (status: statusType) => {
@@ -416,6 +484,7 @@ export const PatientManager = () => {
       }
 
       const category: PatientCategory | undefined =
+        patient?.last_consultation?.last_daily_round?.patient_category ??
         patient?.last_consultation?.category;
       const categoryClass = category
         ? PATIENT_CATEGORIES.find((c) => c.text === category)?.twClass
@@ -424,6 +493,7 @@ export const PatientManager = () => {
       return (
         <Link
           key={`usr_${patient.id}`}
+          data-cy="patient"
           href={patientUrl}
           className={`relative w-full cursor-pointer p-4 pl-5 hover:pl-5 rounded-lg bg-white shadow text-black ring-2 ring-opacity-0 hover:ring-opacity-100 transition-all duration-200 ease-in-out group ${categoryClass}-ring overflow-hidden`}
         >
@@ -713,10 +783,12 @@ export const PatientManager = () => {
                     label:
                       tabValue === 0 ? "Live patients" : "Discharged patients",
                     action: exportPatients(true),
+                    parse: preventDuplicatePatientsDuetoPolicyId,
                   },
                   {
                     label: "All patients",
                     action: exportPatients(false),
+                    parse: preventDuplicatePatientsDuetoPolicyId,
                   },
                 ]}
               />
@@ -825,8 +897,14 @@ export const PatientManager = () => {
             badge("Facility Type", "facility_type"),
             value("District", "district", districtName),
             ordering(),
-            badge("Category", "category"),
+            value("Category", "category", getTheCategoryFromId()),
             badge("Disease Status", "disease_status"),
+            value(
+              "Respiratory Support",
+              "ventilator_interface",
+              qParams.ventilator_interface &&
+                t(`RESPIRATORY_SUPPORT_${qParams.ventilator_interface}`)
+            ),
             value(
               "Gender",
               "gender",
@@ -860,7 +938,7 @@ export const PatientManager = () => {
         />
       </div>
       <div>
-        <PatientFilter {...advancedFilter} />
+        <PatientFilter {...advancedFilter} key={window.location.search} />
         <NavTabs
           onChange={(tab) => updateQuery({ is_active: tab ? "False" : "True" })}
           options={[

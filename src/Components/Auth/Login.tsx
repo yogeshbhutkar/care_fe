@@ -15,10 +15,10 @@ import { LocalStorageKeys } from "../../Common/constants";
 
 export const Login = (props: { forgot?: boolean }) => {
   const {
-    static_light_logo,
     static_black_logo,
     static_dpg_white_logo,
-    static_coronasafe_logo,
+    static_light_logo,
+    static_ohc_light_logo,
     recaptcha_site_key,
     github_url,
     coronasafe_url,
@@ -236,7 +236,7 @@ export const Login = (props: { forgot?: boolean }) => {
                 target="_blank"
               >
                 <img
-                  src={static_coronasafe_logo}
+                  src={static_ohc_light_logo}
                   className="h-10 inline-block"
                   alt="coronasafe logo"
                 />
@@ -274,11 +274,26 @@ export const Login = (props: { forgot?: boolean }) => {
                 : "visible opacity-100 -translate-x-0")
             }
           >
-            <img
-              src={static_black_logo}
-              className="h-8 w-auto mb-4 md:hidden brightness-0 contrast-[0%]"
-              alt="care logo"
-            />{" "}
+            <div className="flex items-center gap-1">
+              {state_logo && (
+                <>
+                  <img
+                    src={state_logo}
+                    className={classNames(
+                      "rounded-lg p-3 h-24 md:hidden",
+                      state_logo_white && "invert brightness-0"
+                    )}
+                    alt="state logo"
+                  />
+                  <div className="mx-4 w-[1px] md:hidden bg-gray-600 h-8 rounded-full" />
+                </>
+              )}
+              <img
+                src={static_black_logo}
+                className="h-8 w-auto md:hidden brightness-0 contrast-[0%]"
+                alt="care logo"
+              />
+            </div>{" "}
             <div className="text-4xl w-[300px] font-black mb-8 text-primary-600">
               {t("auth_login_title")}
             </div>

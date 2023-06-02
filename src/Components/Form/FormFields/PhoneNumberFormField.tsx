@@ -1,12 +1,12 @@
-import { LegacyPhoneNumberField } from "../../Common/HelperInputFields";
-import FormField from "./FormField";
 import { FormFieldBaseProps, useFormFieldPropsResolver } from "./Utils";
+
+import FormField from "./FormField";
+import { LegacyPhoneNumberField } from "../../Common/HelperInputFields";
 
 type Props = FormFieldBaseProps<string> & {
   placeholder?: string;
   autoComplete?: string;
   noAutoFormat?: boolean;
-  tollFree?: boolean;
   onlyIndia?: boolean;
   countryCodeEditable?: boolean;
 };
@@ -16,6 +16,7 @@ const PhoneNumberFormField = (props: Props) => {
   return (
     <FormField field={field}>
       <LegacyPhoneNumberField
+        id={field.id}
         name={field.name}
         disabled={field.disabled}
         value={field.value}
@@ -23,7 +24,6 @@ const PhoneNumberFormField = (props: Props) => {
         placeholder={props.placeholder}
         onlyIndia={props.onlyIndia}
         turnOffAutoFormat={props.noAutoFormat}
-        enableTollFree={props.tollFree}
         countryCodeEditable={!!props.countryCodeEditable}
         className="my-0"
         requiredError={field.error ? props.required : false}
